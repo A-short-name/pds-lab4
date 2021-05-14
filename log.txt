@@ -1,0 +1,9 @@
+79.30.191.25 - - [13/May/2020:19:13:27 +0200] "GET / HTTP/1.1" 200 20001
+79.30.191.25 - - [13/May/2020:19:13:27 +0200] "GET /assets/css/font-awesome.min.css HTTP/1.1" 200 22089
+79.30.191.25 - - [13/May/2020:19:13:27 +0200] "GET /assets/css/custom.css HTTP/1.1" 200 25771
+79.30.191.25 - - [13/May/2020:19:13:27 +0200] "GET /assets/css/bootstrap.min.css HTTP/1.1" 200 117305
+79.30.191.25 - - [13/May/2020:19:13:27 +0200] "GET /assets/images/poli_logo_poli.png HTTP/1.1" 200 19138
+79.30.191.25 - - [13/May/2020:19:13:27 +0200] "GET /assets/images/plus.png HTTP/1.1" 200 14069
+79.30.191.25 - - [13/May/2020:19:13:27 +0200] "GET /assets/js/bootstrap.min.js HTTP/1.1" 200 27726
+79.30.191.25 - - [13/May/2020:19:13:27 +0200] "GET /assets/js/jquery.js HTTP/1.1" 200 93106
+79.30.191.25 - - [13/May/2020:19:13:28 +0200] "GET /favicon.ico HTTP/1.1" 404 1999
