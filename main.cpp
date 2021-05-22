@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <regex>
+#include <unistd.h>
 #include "MapperInput.h"
 #include "Result.hpp"
 #include "ReducerInput.h"
@@ -35,7 +36,7 @@ ResultT mapreduce_reduce(ReducerInputT input);
  * @param file_input input dove verrà letta la linea e dove verranno applicate le map e reduce
  * @param mapfun Map function
  * @param redfun Reduce function
- * @return mappa di stringa 
+ * @return mappa di stringa
  */
 template<typename T,typename R, typename M>
 std::map<std::string, T> mapreduce(std::ifstream& file_input,M mapfun, R redfun);
@@ -137,3 +138,74 @@ std::map<std::string, T> mapreduce(std::ifstream& file_input,M mapfun, R redfun)
     return accs;
 }
 
+template<typename T,typename R, typename M>
+std::map<std::string, T> mapreduce_concurrent(std::ifstream& file_input,M mapfun, R redfun) {
+    std::map<std::string, T> accs{};
+    std::string line;
+
+    int orchestratorToMap[2];
+    int orchestratorToReduce[2];
+    int mapToOrchestrator[2];
+    int reduceToOrchestrator[2];
+
+    pipe(orchestratorToMap);
+    pipe(orchestratorToReduce);
+    pipe(mapToOrchestrator);
+    pipe(reduceToOrchestrator);
+
+    pid_t pid1 = fork();
+
+    /**
+     * Devo creare 2 figli dal padre:
+     * il mapper:
+     *      - in ascolto nella orchestratorToMap per ricevere la linea letta dal file
+     *      - scrive il risultato della map sulla mapToOrchestrator per passare il risultato all'orchestratore
+     *
+     * il reducer:
+     *      - in ascolto nella orchestratorToReduce per ricevere i reducerInput per ridurli
+     *      - scrive il risultato della reduce sulla reduceToOrchestrator per passare il risultato all'orchestratore
+     *
+     *  Il padre sarà l'orchestratore che gestirà la mappa di accumulatori aggiornandola con i risultati della reduce
+     */
+
+    switch (pid1){
+        case -1:
+            //errore
+            break;
+        case 0:
+            //child1
+            break;
+        default:
+            //parent
+            pid_t pid2 = fork();
+            switch (pid2){
+                case -1:
+                    //error
+                    break;
+                case 0:
+                    //child2
+                    break;
+                default:
+                    //parent
+                    //chiude il canale in lettura della pipeline per il mapper
+                    close(orchestratorToMap[0]);
+
+                    while (getline(file_input, line)) {
+                        //chiamando la map devo risolvere i tipi template, che saranno "string" e "result" (che a sua volta è una classe template)
+                        write(orchestratorToMap[1], &line, line.length()*sizeof(char));
+                        auto mapResults = mapfun(MapperInput(line));
+                        //stampa mapResults map
+                        for (auto &p : mapResults) {
+                            std::cout << "(" << p.getKey() << " " << p.getValue() << ") ";
+                            auto reduceResult = redfun(ReducerInput(p, accs[p.getKey()]));
+                            accs[reduceResult.getKey()] = reduceResult.getValue();
+                        }
+                    }
+                    break;
+            }
+            break;
+    }
+
+
+    return accs;
+}
